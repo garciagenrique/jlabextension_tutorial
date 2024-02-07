@@ -1,0 +1,6 @@
+node_modules
+**/node_modules
+**/lib
+**/package.json
+!/package.json
+engarcia_py_package_name

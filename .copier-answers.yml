@@ -1,0 +1,14 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.2.5
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: ''
+author_name: engarcia
+has_binder: false
+has_settings: false
+kind: frontend
+labextension_name: engarcia_js_package_name
+project_short_description: Test and Dev of JupyterLab extensions.
+python_name: engarcia_py_package_name
+repository: https://github.com/garciagenrique/jlabextension_tutorial
+test: true
+
