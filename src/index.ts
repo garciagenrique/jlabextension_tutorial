@@ -1,9 +1,15 @@
 import {
+  ILayoutRestorer,
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { ICommandPalette, MainAreaWidget } from '@jupyterlab/apputils';
+import { 
+  ICommandPalette, 
+  MainAreaWidget,
+  WidgetTracker
+} from '@jupyterlab/apputils';
+
 import { Widget } from '@lumino/widgets';
 
 interface APODResponse {
@@ -93,21 +99,24 @@ class APODWidget extends Widget{
 /**
  * Activate the APOD widhget extension.
  */
-function activate(app: JupyterFrontEnd, palette: ICommandPalette) {
-  console.log('JupyterLab extension engarcia_js_package_name is activated!*!*!')
+function activate(app: JupyterFrontEnd, palette: ICommandPalette, restorer: ILayoutRestorer | null) {
+  console.log('JupyterLab extension engarcia_js_package_name is activated!!*!');
 
-  // Define (againt) a widget creator function
-  const newWidget = () => {
-    const content = new APODWidget();
-    const widget = new MainAreaWidget({content});
-    widget.id = 'jlab-engarcia';
-    widget.title.label = 'Astronomy Picture';
-    widget.title.closable = true;
-    return widget;
-  }
+  // Declare a widget variable
+  let widget: MainAreaWidget<APODWidget>;
+  
+  // // Define (again) a widget creator function
+  // const newWidget = () => {
+  //   const content = new APODWidget();
+  //   const widget = new MainAreaWidget({content});
+  //   widget.id = 'jlab-engarcia';
+  //   widget.title.label = 'Astronomy Picture';
+  //   widget.title.closable = true;
+  //   return widget;
+  // }
 
-  // Create a single widget
-  let widget = newWidget();
+  // // Create a single widget
+  // let widget = newWidget();
 
   // Add an app command
   const command: string = 'apod:open';
@@ -115,8 +124,16 @@ function activate(app: JupyterFrontEnd, palette: ICommandPalette) {
     label: 'Random Astronomy Picture',
     execute: () => {
       //Regenerate the widget if disposed
-      if (widget.isDisposed) {
-        widget = newWidget();
+      if (!widget || widget.isDisposed) {
+        const content = new APODWidget();
+        widget = new MainAreaWidget({content});
+        widget.id = 'engarcia-jupyterlab';
+        widget.title.label = 'Astronomy Picture';
+        widget.title.closable = true;
+      }
+      if (!tracker.has(widget)) {
+        // Track the state of the widget for later restoration
+        tracker.add(widget);
       }
       if (!widget.isAttached) {
         // Attach the widget to the main work area if it's not there
@@ -124,6 +141,7 @@ function activate(app: JupyterFrontEnd, palette: ICommandPalette) {
       }  
       // Refresh the picture in the widget
       widget.content.updateAPODImage();
+      
       // Activate the widget
       app.shell.activateById(widget.id);
     }
@@ -131,16 +149,28 @@ function activate(app: JupyterFrontEnd, palette: ICommandPalette) {
 
   // Add the command to the palette
   palette.addItem({ command, category: 'Tutorial'});
+
+  // Track and restory dhe widgets state
+  let tracker = new WidgetTracker<MainAreaWidget<APODWidget>>({
+    namespace: 'apod'
+  });
+  if (restorer){
+    restorer.restore(tracker, {
+      command,
+      name: () => 'apod'      
+    });
+  }
 }
   /**
   * Initialization data for the jupyterlab_apod extension.
   */
   const plugin: JupyterFrontEndPlugin<void> = {
-    id: 'engarcia_js_package_name:plugin',
+    id: 'engarcia_js_package_name',
     description: 'Test and Dev of JupyterLab extensions.',
     autoStart: true,
     requires: [ICommandPalette],
+    optional: [ILayoutRestorer],
     activate: activate
-  }
+  };
 
 export default plugin;
