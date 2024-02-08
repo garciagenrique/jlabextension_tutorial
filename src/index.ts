@@ -31,6 +31,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const newWidget = async () => {
       // Create a blank content widget inside of a MainAreaWidget
       const content = new Widget();
+      content.addClass('my-apodWidget');
       const widget = new MainAreaWidget({ content });
       widget.id = 'jlab-engarcia';
       widget.title.label = 'Astronomy Picture';
@@ -40,6 +41,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
       // Add an image to the content
       let img = document.createElement('img');
       content.node.appendChild(img);
+
+      let summary = document.createElement('p');
+      content.node.appendChild(summary);
 
       // Get a random daty
       function randomDate() {
@@ -51,15 +55,38 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
       // Show infor about a random pic
       const response = await fetch(`https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&date=${randomDate()}`);
-      const data = await response.json() as APODResponse;
-
-      if (data.media_type === 'image') {
-        // Populate the image
-        img.src = data.url;
-        img.title = data.title;
+      if (!response.ok) {
+        const data = await response.json();
+        if (data.error) {
+          summary.innerText = data.error.message;
+        } else {
+          summary.innerText = response.statusText;
+        }
       } else {
-        console.log('Random APOD was not a picture');
+        const data = await response.json() as APODResponse;
+
+        if (data.media_type === 'image') {
+          // populate the image - this tutorial is just a cp paste ...
+          img.src = data.url;
+          img.title = data.title;
+          summary.innerText = data.title;
+          if (data.copyright) {
+            summary.innerText += ` (Copyright ${data.copyright})`;
+          }
+        } else {
+          summary.innerText = 'Random APOD fetched was not an image.';
+        }
+
       }
+      // const data = await response.json() as APODResponse;
+
+      // if (data.media_type === 'image') {
+      //   // Populate the image
+      //   img.src = data.url;
+      //   img.title = data.title;
+      // } else {
+      //   console.log('Random APOD was not a picture');
+      // }
 
       return widget;
     }
